@@ -101,6 +101,60 @@ func TestGetMeForwardsRequestMakerErr(t *testing.T) {
 	}
 }
 
+// SendMessage
+
+func TestSendMessage(t *testing.T) {
+	requestMaker := new(requestMakerMock)
+
+	c := NewClient("mockToken")
+	c.requestMaker = requestMaker
+
+	params := SendMessageParams{
+		ChatID: "mockChatID",
+		Text:   "mock text",
+	}
+
+	message, err := c.SendMessage(params)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !requestMaker.makeRequestCalled {
+		t.Fatal("makeRequest method not called as expected")
+	}
+
+	if requestMaker.passedMethod != "sendMessage" {
+		t.Fatal("passed method to requestMaker is different than expected")
+	}
+
+	if !reflect.DeepEqual(requestMaker.passedParams.(SendMessageParams), params) {
+		t.Fatal("passed params to requestMaker are different than expected")
+	}
+
+	if !reflect.DeepEqual(requestMaker.passedV.(*Message), message) {
+		t.Fatal("passed v to requestMaker is different than expected")
+	}
+}
+
+func TestSendMessageForwardsRequestMakerErr(t *testing.T) {
+	requestMaker := &requestMakerMock{
+		errorToReturn: errors.New("mock error"),
+	}
+
+	c := NewClient("mockToken")
+	c.requestMaker = requestMaker
+
+	params := SendMessageParams{
+		ChatID: "mockChatID",
+		Text:   "mock text",
+	}
+
+	_, err := c.SendMessage(params)
+	if err == nil || err.Error() != "mock error" {
+		t.Fatal("returned error is different than expected")
+	}
+}
+
 // TODO: test all client methods
 
 // Mocks
